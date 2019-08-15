@@ -1,0 +1,36 @@
+version: '3'
+services:
+  opa:
+    image: openpolicyagent/opa:0.13.2
+    ports:
+      - 8181:8181
+    command:
+      - 'run'
+      - '--server'
+      - '--log-level=debug'
+      - '-c=/config.yml'
+    volumes:
+      - ./docker/opa/config.yml:/config.yml
+  minio:
+    image: minio/minio
+    volumes:
+      - ./docker/minio/data:/data
+    ports:
+      - 9000:9000
+    environment:
+      MINIO_ACCESS_KEY: secretsecret
+      MINIO_SECRET_KEY: secretsecret
+    command: server /data
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc config host add myminio http://minio:9000 secretsecret secretsecret) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb myminio/authz;
+      /usr/bin/mc policy set download myminio/authz;
+      /usr/bin/mc mb myminio/users;
+      /usr/bin/mc policy set download myminio/users;
+      exit 0;
+      "

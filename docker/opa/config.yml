@@ -1,0 +1,17 @@
+services:
+  - name: acmecorp
+    url: http://minio:9000/
+
+bundles:
+  authz:
+    service: acmecorp
+    resource: authz/bundle.tar.gz
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 20
+  users:
+    service: acmecorp
+    resource: users/bundle.tar.gz
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 20
